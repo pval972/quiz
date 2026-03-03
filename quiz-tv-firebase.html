@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QUIZ SHOW — TV</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --dark: #060610;
+  --card: #0d0d1f;
+  --border: #1e1e3a;
+  --text: #dde2f0;
+  --gold: #f5c842;
+  --gold2: #e8a020;
+  --silver: #8899bb;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--dark);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+}
+
+#bg {
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 10% 40%, rgba(20,10,70,.8) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 90% 20%, rgba(5,20,60,.7) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 50% 90%, rgba(30,5,50,.5) 0%, transparent 70%),
+    #060610;
+}
+#bg::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 5% 10%, rgba(255,255,255,.6) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 15% 70%, rgba(255,255,255,.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 35%, rgba(255,255,255,.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 40% 85%, rgba(255,255,255,.3) 0%, transparent 100%),
+    radial-gradient(2px 2px at 55% 20%, rgba(255,255,255,.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 68% 60%, rgba(255,255,255,.4) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 78% 90%, rgba(255,255,255,.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 88% 45%, rgba(255,255,255,.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 95% 75%, rgba(255,255,255,.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 33% 55%, rgba(255,255,255,.25) 0%, transparent 100%),
+    radial-gradient(1px 1px at 72% 15%, rgba(255,255,255,.35) 0%, transparent 100%);
+}
+
+#app { position: relative; z-index: 5; height: 100vh; display: flex; flex-direction: column; }
+
+#header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 32px;
+  background: linear-gradient(180deg, rgba(0,0,0,.75) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(245,200,66,.12);
+  flex-shrink: 0;
+}
+.logo {
+  font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: 6px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px rgba(245,200,66,.45));
+}
+#scoreboard { display: flex; gap: 12px; align-items: center; }
+.pscore {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 7px 16px; text-align: center; min-width: 100px;
+  transition: all .4s;
+}
+.pscore.leader { box-shadow: 0 0 16px rgba(245,200,66,.25); }
+.pscore .pname { font-size: .65rem; color: var(--silver); text-transform: uppercase; letter-spacing: 1.5px; }
+.pscore .ppts { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; }
+
+#grid-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 28px 4px; }
+#qleft { font-size: .7rem; color: #3a3a55; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 6px; }
+#grid {
+  display: grid; grid-template-columns: repeat(10, 1fr);
+  gap: 6px; width: 100%; max-width: 900px;
+}
+
+.cell {
+  aspect-ratio: 1; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.15rem;
+  transition: all .5s ease;
+  position: relative; overflow: hidden;
+  border: 1.5px solid transparent;
+}
+.cell.neutral {
+  background: var(--card);
+  border-color: var(--border);
+  color: #3a3a55;
+}
+.cell.neutral.avail {
+  color: #6070a0;
+  background: linear-gradient(135deg, #0e0e22, #0a0a1a);
+  border-color: #252545;
+}
+.cell.colored {
+  color: #fff;
+  font-weight: 700;
+}
+.cell.active {
+  animation: cell-pulse .8s infinite;
+  color: var(--dark) !important;
+  border-color: transparent !important;
+  z-index: 2;
+}
+@keyframes cell-pulse {
+  0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,255,255,.5); }
+  50% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(255,255,255,0); }
+}
+.cell.used { opacity: .15; background: #040408 !important; border-color: #0e0e16 !important; color: #1a1a28 !important; }
+
+#legend {
+  display: flex; gap: 16px; justify-content: center; align-items: center;
+  padding: 6px 0 2px; flex-shrink: 0;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: .75rem; color: #666; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+#bottom { display: flex; gap: 10px; justify-content: center; padding: 6px 28px 10px; flex-shrink: 0; }
+.bscore {
+  border-radius: 12px; padding: 9px 20px; text-align: center; min-width: 130px;
+  border: 1px solid;
+  transition: all .4s;
+}
+.bscore.leader { box-shadow: 0 0 18px rgba(245,200,66,.2); }
+.bscore .bn { font-size: .7rem; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 2px; }
+.bscore .bs { font-size: .65rem; opacity: .6; margin-bottom: 2px; }
+.bscore .bp { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; }
+
+#flash-overlay {
+  display: none; position: fixed; inset: 0; z-index: 300;
+  background: rgba(4,4,14,.92);
+  flex-direction: column; align-items: center; justify-content: center; gap: 28px;
+}
+#flash-overlay.show { display: flex; }
+.flash-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 3rem; letter-spacing: 6px;
+  color: var(--gold); text-align: center;
+  filter: drop-shadow(0 0 30px rgba(245,200,66,.4));
+}
+.flash-sub { font-size: .9rem; color: #555; letter-spacing: 3px; text-transform: uppercase; margin-top: -20px; }
+#flash-grid {
+  display: grid; grid-template-columns: repeat(10, 1fr);
+  gap: 7px; width: 90%; max-width: 860px;
+}
+.flash-cell {
+  aspect-ratio: 1; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+  font-weight: 700; color: #fff;
+  transition: all .3s;
+}
+#flash-timer {
+  font-family: 'Bebas Neue', sans-serif; font-size: 5rem; color: var(--gold);
+  line-height: 1; filter: drop-shadow(0 0 20px rgba(245,200,66,.5));
+  animation: timer-pulse 1s infinite;
+}
+@keyframes timer-pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+
+#spinner {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(4,4,14,.97);
+  flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+}
+#spinner.show { display: flex; }
+.spin-wrap {
+  width: 200px; height: 200px; position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.spin-ring {
+  position: absolute; inset: 0; border-radius: 50%;
+  border: 4px solid #1a1a2e; border-top-color: var(--gold);
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin-num {
+  font-family: 'Bebas Neue', sans-serif; font-size: 5rem;
+  color: var(--gold); position: relative; z-index: 1;
+  filter: drop-shadow(0 0 16px rgba(245,200,66,.5));
+}
+.spin-label { font-size: .8rem; color: #555; letter-spacing: 3px; text-transform: uppercase; }
+
+#qscreen {
+  display: none; position: fixed; inset: 0; z-index: 400;
+  background: rgba(4,4,14,.98);
+  flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 56px; gap: 0;
+}
+#qscreen.show { display: flex; }
+
+.q-meta { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; justify-content: center; }
+.q-mode-pill {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 4px;
+  padding: 6px 20px; border-radius: 100px;
+}
+.q-mode-pill.cash  { background: #15803d; color: #fff; box-shadow: 0 0 20px rgba(21,128,61,.4); }
+.q-mode-pill.carre { background: #1d4ed8; color: #fff; box-shadow: 0 0 20px rgba(29,78,216,.4); }
+.q-mode-pill.duo   { background: #7e22ce; color: #fff; box-shadow: 0 0 20px rgba(126,34,206,.4); }
+.q-cat-pill {
+  font-size: .75rem; color: #888; letter-spacing: 2px; text-transform: uppercase;
+  padding: 6px 14px; border-radius: 100px; border: 1px solid #252545;
+}
+.q-owner-pill {
+  font-size: .75rem; letter-spacing: 1px; font-weight: 700;
+  padding: 6px 14px; border-radius: 100px;
+}
+.q-bonus {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 3px;
+  padding: 6px 16px; border-radius: 100px;
+  background: rgba(245,200,66,.15); border: 1px solid rgba(245,200,66,.4);
+  color: var(--gold); animation: bonus-glow 1.5s infinite;
+}
+@keyframes bonus-glow { 0%,100%{box-shadow:0 0 0 0 rgba(245,200,66,.3);} 50%{box-shadow:0 0 0 8px rgba(245,200,66,0);} }
+
+#q-text {
+  font-size: 2.2rem; font-weight: 700; text-align: center;
+  line-height: 1.3; color: #fff; max-width: 860px; margin-bottom: 36px;
+  animation: slide-down .5s .1s both ease;
+}
+#q-answers {
+  display: grid; gap: 12px; width: 100%; max-width: 840px;
+  animation: slide-up .5s .25s both ease;
+}
+#q-answers.g2 { grid-template-columns: 1fr 1fr; }
+#q-answers.g4 { grid-template-columns: 1fr 1fr; }
+
+.ans-card {
+  background: var(--card); border: 2px solid var(--border);
+  border-radius: 16px; padding: 20px 26px;
+  font-size: 1.15rem; font-weight: 500;
+  display: flex; align-items: center; gap: 14px;
+  transition: all .35s;
+}
+.ans-card .ltr {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #191930; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: #666;
+}
+.ans-card.correct { background: rgba(21,128,61,.18); border-color: #22c55e; }
+.ans-card.correct .ltr { background: #22c55e; color: #fff; }
+.ans-card.wrong { border-color: #ef4444; opacity: .4; }
+.cash-free {
+  text-align: center; padding: 28px; border: 1px dashed #222; border-radius: 16px;
+  color: #444; font-size: 1rem; font-style: italic; width: 100%; max-width: 600px;
+}
+
+#winner {
+  display: none; position: fixed; inset: 0; z-index: 600;
+  background: rgba(4,4,14,.98);
+  flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+}
+#winner.show { display: flex; }
+.w-trophy { font-size: 6rem; animation: bounce 1.2s infinite; }
+@keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-20px);} }
+.w-name {
+  font-family: 'Bebas Neue', sans-serif; font-size: 5.5rem; letter-spacing: 8px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.w-sub { font-size: 1.2rem; color: #888; }
+.w-podium { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 12px; }
+.w-card {
+  border-radius: 16px; padding: 16px 24px; text-align: center; min-width: 120px;
+  background: var(--card); border: 1px solid var(--border);
+}
+.w-rank { font-size: 1.5rem; margin-bottom: 4px; }
+.w-pname { font-size: .7rem; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+.w-pts { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; color: var(--gold); }
+
+#setup {
+  position: fixed; inset: 0; z-index: 700;
+  background: radial-gradient(ellipse at 30% 40%, #14143a 0%, #060610 70%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+}
+.setup-logo {
+  font-family: 'Bebas Neue', sans-serif; font-size: 5.5rem; letter-spacing: 10px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 40px rgba(245,200,66,.35));
+}
+.setup-sub { font-size: .85rem; color: #444; letter-spacing: 4px; text-transform: uppercase; margin-top: -18px; }
+.setup-box {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 26px 36px; max-width: 500px; text-align: center;
+  color: #666; line-height: 1.9; font-size: .9rem;
+}
+.setup-box b { color: var(--gold); }
+.setup-blink { font-size: .75rem; color: #333; letter-spacing: 3px; text-transform: uppercase; animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.15;} }
+
+.cf { position: fixed; top: -12px; border-radius: 2px; animation: cf-fall linear forwards; z-index: 800; }
+@keyframes cf-fall { to { transform: translateY(110vh) rotate(900deg); opacity: 0; } }
+
+@keyframes slide-down { from{opacity:0;transform:translateY(-18px);} to{opacity:1;transform:translateY(0);} }
+@keyframes slide-up   { from{opacity:0;transform:translateY(18px);}  to{opacity:1;transform:translateY(0);} }
+</style>
+</head>
+<body>
+<div id="bg"></div>
+
+<div id="setup">
+  <div class="setup-logo">QUIZ SHOW</div>
+  <div class="setup-sub">Édition Spécialités</div>
+  <div class="setup-box">
+    Ouvre <b>quiz-remote.html</b> sur l'iPhone du maître du jeu.<br>
+    Configure les joueurs et lance la partie.
+  </div>
+  <div class="setup-blink">En attente du maître du jeu…</div>
+</div>
+
+<div id="app">
+  <div id="header">
+    <div class="logo">QUIZ SHOW</div>
+    <div id="scoreboard"></div>
+  </div>
+  <div id="grid-wrap">
+    <div id="qleft">50 / 50 questions restantes</div>
+    <div id="grid"></div>
+  </div>
+  <div id="legend"></div>
+  <div id="bottom"></div>
+</div>
+
+<div id="flash-overlay">
+  <div class="flash-title">MÉMORISEZ VOS CASES !</div>
+  <div class="flash-sub">Vous avez <span id="flash-timer-txt">10</span> secondes…</div>
+  <div id="flash-grid"></div>
+  <div id="flash-timer">10</div>
+</div>
+
+<div id="spinner">
+  <div class="spin-wrap">
+    <div class="spin-ring"></div>
+    <div class="spin-num" id="spin-num">?</div>
+  </div>
+  <div class="spin-label">Chargement de la question…</div>
+</div>
+
+<div id="qscreen">
+  <div class="q-meta">
+    <div id="q-mode-pill" class="q-mode-pill cash">CASH</div>
+    <div id="q-cat-pill" class="q-cat-pill"></div>
+    <div id="q-owner-pill" class="q-owner-pill"></div>
+    <div id="q-bonus" class="q-bonus" style="display:none">✦ BONUS ×2</div>
+  </div>
+  <div id="q-text"></div>
+  <div id="q-answers"></div>
+</div>
+
+<div id="winner">
+  <div class="w-trophy">🏆</div>
+  <div id="w-name" class="w-name"></div>
+  <div id="w-sub" class="w-sub"></div>
+  <div class="w-podium" id="w-podium"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// FIREBASE — REALTIME DATABASE
+// ═══════════════════════════════════════════
+const FIREBASE_URL = 'https://quizz-8dd48-default-rtdb.firebaseio.com/quizshow/cmd.json';
+let lastTs = 0;
+
+function startFirebaseListener() {
+  const sseUrl = 'https://quizz-8dd48-default-rtdb.firebaseio.com/quizshow/cmd.json';
+  const es = new EventSource(sseUrl);
+  es.addEventListener('put', e => {
+    try {
+      const payload = JSON.parse(e.data);
+      const cmd = payload.data;
+      if (cmd && cmd.ts && cmd.ts > lastTs) {
+        lastTs = cmd.ts;
+        handle(cmd);
+      }
+    } catch(err) {}
+  });
+  es.onerror = () => {
+    es.close();
+    startPolling();
+  };
+}
+
+function startPolling() {
+  setInterval(async () => {
+    try {
+      const r = await fetch(FIREBASE_URL);
+      const cmd = await r.json();
+      if (cmd && cmd.ts && cmd.ts > lastTs) {
+        lastTs = cmd.ts;
+        handle(cmd);
+      }
+    } catch(e) {}
+  }, 500);
+}
+
+startFirebaseListener();
+
+// ── AUTO-RESTORE si la TV recharge en cours de partie ──
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    const save = JSON.parse(localStorage.getItem('quiz-game-save') || 'null');
+    if (save && save.players && save.players.length > 0) {
+      G.players = save.players;
+      G.cells = save.cells;
+      G.used = new Set(save.used);
+      document.getElementById('setup').style.display = 'none';
+      buildGrid(false);
+      renderScores();
+      renderLegend();
+      renderBottom();
+      [...G.used].forEach(num => {
+        const el = document.getElementById('cell'+num);
+        if (el) { el.className='cell used'; el.style.background=''; el.style.borderColor=''; el.style.boxShadow=''; }
+      });
+      document.getElementById('qleft').textContent = `${50-G.used.size} / 50 questions restantes`;
+    }
+  } catch(e) {}
+});
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let G = { players:[], cells:{}, used: new Set(), currentQ: null, currentMode: null, colored: false };
+
+// ═══════════════════════════════════════════
+// HANDLER
+// ═══════════════════════════════════════════
+function handle(cmd) {
+  if (cmd.type === 'start')    doStart(cmd);
+  if (cmd.type === 'flash')    doFlash(cmd);
+  if (cmd.type === 'recall')   doRecall(cmd);
+  if (cmd.type === 'hidecolor') doHideColor();
+  if (cmd.type === 'spin')     doSpin(cmd);
+  if (cmd.type === 'question') doQuestion(cmd);
+  if (cmd.type === 'reveal')   doReveal(cmd);
+  if (cmd.type === 'next')     doNext(cmd);
+  if (cmd.type === 'winner')   doWinner(cmd);
+}
+
+function doStart(cmd) {
+  G.players = cmd.players;
+  G.cells = cmd.cells;
+  G.used = new Set();
+  document.getElementById('setup').style.display = 'none';
+  buildGrid(false);
+  renderScores();
+  renderLegend();
+  renderBottom();
+}
+
+function buildGrid(colored) {
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  for (let i = 1; i <= 50; i++) {
+    const d = document.createElement('div');
+    d.id = 'cell'+i;
+    d.dataset.num = i;
+    setCellAppearance(d, i, colored);
+    g.appendChild(d);
+  }
+  document.getElementById('qleft').textContent = `${50 - G.used.size} / 50 questions restantes`;
+}
+
+function setCellAppearance(el, num, colored) {
+  const info = G.cells[num];
+  const used = G.used.has(num);
+  if (used) {
+    el.className = 'cell used';
+    el.textContent = num;
+    el.style.background = '';
+    el.style.borderColor = '';
+    return;
+  }
+  el.textContent = num;
+  if (colored && info && info.owner) {
+    const p = G.players[info.ownerIdx];
+    el.className = 'cell colored';
+    el.style.background = p.color + 'cc';
+    el.style.borderColor = p.color;
+    el.style.boxShadow = `0 0 12px ${p.color}66`;
+  } else if (colored && info && !info.owner) {
+    el.className = 'cell colored';
+    el.style.background = '#2a2a40';
+    el.style.borderColor = '#454565';
+    el.style.boxShadow = '';
+  } else {
+    el.className = 'cell neutral avail';
+    el.style.background = '';
+    el.style.borderColor = '';
+    el.style.boxShadow = '';
+  }
+}
+
+function refreshGrid(colored) {
+  for (let i = 1; i <= 50; i++) {
+    const el = document.getElementById('cell'+i);
+    if (el) setCellAppearance(el, i, colored);
+  }
+}
+
+function doFlash(cmd) {
+  const fg = document.getElementById('flash-grid');
+  fg.innerHTML = '';
+  for (let i = 1; i <= 50; i++) {
+    const info = G.cells[i];
+    const d = document.createElement('div');
+    d.className = 'flash-cell';
+    d.textContent = i;
+    if (info && info.owner) {
+      const p = G.players[info.ownerIdx];
+      d.style.background = p.color + 'dd';
+      d.style.boxShadow = `0 0 10px ${p.color}55`;
+    } else {
+      d.style.background = '#2a2a40';
+    }
+    fg.appendChild(d);
+  }
+  const overlay = document.getElementById('flash-overlay');
+  overlay.classList.add('show');
+  let t = 10;
+  const el = document.getElementById('flash-timer');
+  el.textContent = t;
+  document.getElementById('flash-timer-txt').textContent = t;
+  const iv = setInterval(() => {
+    t--;
+    el.textContent = t;
+    document.getElementById('flash-timer-txt').textContent = t;
+    if (t <= 0) {
+      clearInterval(iv);
+      overlay.classList.remove('show');
+      refreshGrid(false);
+    }
+  }, 1000);
+}
+
+function doRecall(cmd) {
+  refreshGrid(true);
+  setTimeout(() => refreshGrid(false), cmd.duration || 5000);
+}
+
+function doHideColor() {
+  refreshGrid(false);
+}
+
+function doSpin(cmd) {
+  document.querySelectorAll('.cell').forEach(c => {
+    if (!c.classList.contains('used') && !c.classList.contains('active')) {
+      setCellAppearance(c, parseInt(c.dataset.num), false);
+    }
+  });
+  const el = document.getElementById('cell'+cmd.cell);
+  if (el) {
+    const info = G.cells[cmd.cell];
+    const bg = (info && info.owner) ? G.players[info.ownerIdx].color : '#f5c842';
+    el.classList.add('active');
+    el.style.background = bg;
+    el.style.borderColor = bg;
+    el.style.boxShadow = `0 0 20px ${bg}99`;
+  }
+
+  const sp = document.getElementById('spinner');
+  const sn = document.getElementById('spin-num');
+  sp.classList.add('show'); sn.textContent = '?';
+  let i = 0;
+  const iv = setInterval(() => {
+    sn.textContent = Math.floor(Math.random()*50)+1;
+    if(++i > 20) { clearInterval(iv); sn.textContent = cmd.cell; }
+  }, 80);
+}
+
+function doQuestion(cmd) {
+  document.getElementById('spinner').classList.remove('show');
+  G.currentMode = cmd.mode;
+  G.currentQ = cmd.q;
+  G.currentOwnerIdx = cmd.ownerIdx;
+
+  const qs = document.getElementById('qscreen');
+  const pill = document.getElementById('q-mode-pill');
+  pill.className = `q-mode-pill ${cmd.mode}`;
+  pill.textContent = {cash:'CASH',carre:'CARRÉ',duo:'DUO'}[cmd.mode] +
+    {cash:' — 10 pts', carre:' — 5 pts', duo:' — 2 pts'}[cmd.mode];
+
+  document.getElementById('q-cat-pill').textContent = cmd.q.cat;
+
+  const op = document.getElementById('q-owner-pill');
+  const bonus = document.getElementById('q-bonus');
+  if (cmd.ownerIdx === null) {
+    op.textContent = '🌐 Culture Générale';
+    op.style.background = 'rgba(70,70,100,.3)';
+    op.style.border = '1px solid #252545';
+    op.style.color = '#888';
+    bonus.style.display = 'none';
+  } else {
+    const p = G.players[cmd.ownerIdx];
+    op.textContent = `🎯 Domaine de ${p.name}`;
+    op.style.background = p.color + '22';
+    op.style.border = `1px solid ${p.color}66`;
+    op.style.color = p.color;
+    if (cmd.showBonus) {
+      bonus.style.display = 'block';
+    } else {
+      bonus.style.display = 'none';
+    }
+  }
+
+  document.getElementById('q-text').textContent = cmd.q.q;
+
+  const ac = document.getElementById('q-answers');
+  ac.innerHTML = '';
+  if (cmd.mode === 'cash') {
+    ac.className = '';
+    ac.innerHTML = '<div class="cash-free">Le joueur répond librement…</div>';
+  } else {
+    const answers = cmd.answers;
+    ac.className = answers.length === 2 ? 'g2' : 'g4';
+    answers.forEach((ans, i) => {
+      const d = document.createElement('div');
+      d.className = 'ans-card';
+      d.dataset.val = ans;
+      d.innerHTML = `<div class="ltr">${String.fromCharCode(65+i)}</div><span>${ans}</span>`;
+      ac.appendChild(d);
+    });
+  }
+  qs.classList.add('show');
+}
+
+function doReveal(cmd) {
+  const q = G.currentQ;
+  document.querySelectorAll('.ans-card').forEach(card => {
+    if (card.dataset.val === q.a) card.classList.add('correct');
+    else card.classList.add('wrong');
+  });
+  if (cmd.players) { G.players = cmd.players; renderScores(); renderBottom(); }
+}
+
+function doNext(cmd) {
+  document.getElementById('qscreen').classList.remove('show');
+  if (cmd.cell) {
+    G.used.add(cmd.cell);
+    const el = document.getElementById('cell'+cmd.cell);
+    if (el) { el.className = 'cell used'; el.style.background=''; el.style.borderColor=''; el.style.boxShadow=''; }
+  }
+  document.getElementById('qleft').textContent = `${50-G.used.size} / 50 questions restantes`;
+  if (cmd.players) { G.players = cmd.players; renderScores(); renderBottom(); }
+}
+
+function renderScores() {
+  const sorted = [...G.players].sort((a,b)=>b.score-a.score);
+  document.getElementById('scoreboard').innerHTML = sorted.map((p,i) =>
+    `<div class="pscore${i===0?' leader':''}" style="border-color:${p.color}44">
+      <div class="pname" style="color:${p.color}99">${p.name}</div>
+      <div class="ppts" style="color:${p.color}">${p.score} pts</div>
+    </div>`
+  ).join('');
+}
+
+function renderLegend() {
+  const l = document.getElementById('legend');
+  l.innerHTML = G.players.map(p =>
+    `<div class="legend-item">
+      <div class="legend-dot" style="background:${p.color}"></div>
+      <span style="color:${p.color}bb">${p.name} — ${p.specialite}</span>
+    </div>`
+  ).join('') +
+  `<div class="legend-item"><div class="legend-dot" style="background:#454565"></div><span style="color:#555">Culture G</span></div>`;
+}
+
+function renderBottom() {
+  const sorted = [...G.players].sort((a,b)=>b.score-a.score);
+  document.getElementById('bottom').innerHTML = sorted.map((p,i) =>
+    `<div class="bscore${i===0?' leader':''}" style="background:${p.color}12;border-color:${p.color}44">
+      <div class="bn" style="color:${p.color}aa">${p.name}</div>
+      <div class="bs" style="color:${p.color}66">${p.specialite}</div>
+      <div class="bp" style="color:${p.color}">${p.score}</div>
+    </div>`
+  ).join('');
+}
+
+function doWinner(cmd) {
+  document.getElementById('qscreen').classList.remove('show');
+  G.players = cmd.players;
+  const sorted = [...G.players].sort((a,b)=>b.score-a.score);
+  const w = sorted[0];
+  document.getElementById('w-name').textContent = w.name.toUpperCase();
+  document.getElementById('w-name').style.color = w.color;
+  document.getElementById('w-sub').textContent = `${w.score} points — Champion de "${w.specialite}"`;
+  document.getElementById('w-podium').innerHTML = sorted.map((p,i) =>
+    `<div class="w-card" style="border-color:${p.color}44;background:${p.color}0d">
+      <div class="w-rank">${['🥇','🥈','🥉','4️⃣','5️⃣'][i]||'·'}</div>
+      <div class="w-pname" style="color:${p.color}99">${p.name}</div>
+      <div class="w-pts" style="color:${p.color}">${p.score}</div>
+    </div>`
+  ).join('');
+  document.getElementById('winner').classList.add('show');
+  confetti(w.color);
+}
+
+function confetti(mainColor) {
+  const cols = [mainColor,'#f5c842','#e8a020','#22c55e','#3b82f6','#a855f7','#fff'];
+  for(let i=0;i<100;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div'); el.className='cf';
+      el.style.cssText=`left:${Math.random()*100}vw;width:${5+Math.random()*9}px;height:${5+Math.random()*9}px;background:${cols[Math.floor(Math.random()*cols.length)]};border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${2+Math.random()*2.5}s;`;
+      document.body.appendChild(el); setTimeout(()=>el.remove(),5000);
+    },i*35);
+  }
+}
+</script>
+</body>
+</html>

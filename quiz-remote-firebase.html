@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>QUIZ — Maître du Jeu</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --dark:#08080f; --card:#111120; --border:#1e1e38;
+  --gold:#f5c842; --gold2:#e8a020; --text:#dde2f0; --muted:#8899bb;
+  --cash:#22c55e; --carre:#3b82f6; --duo:#a855f7; --red:#ef4444;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;max-width:430px;margin:0 auto;padding-bottom:40px;}
+
+.topbar{
+  background:linear-gradient(135deg,#0e0e22,#08080f);
+  border-bottom:1px solid rgba(245,200,66,.15);
+  padding:14px 20px; display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:80;
+}
+.top-logo{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:3px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.top-right{display:flex;align-items:center;gap:8px;}
+.badge{background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.2);
+  border-radius:100px;padding:4px 12px;font-size:.65rem;color:var(--gold);letter-spacing:2px;text-transform:uppercase;}
+
+.scr{display:none;} .scr.on{display:block;}
+.pad{padding:20px;}
+
+.hero{text-align:center;padding:20px 0 10px;}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:5px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 12px rgba(245,200,66,.3));}
+.hero-sub{font-size:.75rem;color:#444;letter-spacing:3px;text-transform:uppercase;margin-top:4px;}
+
+.lbl{font-size:.65rem;color:#555;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;margin-top:16px;}
+.inp{width:100%;background:var(--card);border:2px solid var(--border);border-radius:12px;
+  padding:13px 16px;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:500;
+  color:var(--text);outline:none;transition:border-color .2s;}
+.inp:focus{border-color:var(--gold);}
+.inp::placeholder{color:#333;}
+
+#player-configs{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
+.pconfig{background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;}
+.pconfig-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.color-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.pconfig-name{font-weight:700;font-size:.95rem;flex:1;}
+.pconfig-spec{font-size:.75rem;color:var(--muted);}
+.pconfig-remove{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);
+  border-radius:7px;padding:4px 10px;font-size:.75rem;color:var(--red);cursor:pointer;}
+
+.btn-add{width:100%;background:rgba(245,200,66,.06);border:1.5px dashed rgba(245,200,66,.2);
+  border-radius:12px;padding:13px;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;
+  color:var(--gold);cursor:pointer;margin-top:8px;transition:all .2s;}
+.btn-add:active{background:rgba(245,200,66,.12);}
+
+.btn-launch{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:var(--dark);border:none;border-radius:12px;padding:17px;
+  font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:4px;
+  cursor:pointer;margin-top:16px;box-shadow:0 4px 24px rgba(245,200,66,.3);transition:all .2s;}
+.btn-launch:active{transform:scale(.97);}
+.btn-launch:disabled{opacity:.3;pointer-events:none;}
+
+#score-strip{display:flex;gap:7px;overflow-x:auto;padding:0 0 10px;margin-bottom:14px;}
+#score-strip::-webkit-scrollbar{display:none;}
+.sc{background:var(--card);border:1px solid;border-radius:9px;padding:7px 13px;text-align:center;flex-shrink:0;min-width:76px;transition:all .3s;}
+.sc.top{box-shadow:0 0 10px rgba(245,200,66,.2);}
+.sc-n{font-size:.6rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px;}
+.sc-p{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;}
+
+.btn-recall{width:100%;background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.2);
+  border-radius:10px;padding:11px;font-size:.8rem;font-weight:600;color:var(--gold);
+  cursor:pointer;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .2s;}
+.btn-recall:active{background:rgba(245,200,66,.14);}
+
+.grid-lbl{font-size:.65rem;color:#555;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+#mini-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:12px;}
+.mc{aspect-ratio:1;border-radius:7px;background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:.75rem;color:#444;transition:all .15s;position:relative;}
+.mc.av{color:var(--text);cursor:pointer;background:#0e0e22;}
+.mc.av:active{transform:scale(.88);}
+.mc.sel{color:#fff !important;box-shadow:0 0 12px rgba(245,200,66,.4);}
+.mc.used{opacity:.12;}
+.mc .dot{position:absolute;top:2px;right:2px;width:5px;height:5px;border-radius:50%;}
+
+.num-row{display:flex;gap:8px;margin-bottom:4px;}
+.num-inp{width:72px;background:var(--card);border:2px solid var(--border);border-radius:10px;
+  padding:10px;font-family:'Bebas Neue',sans-serif;font-size:1.7rem;color:var(--gold);text-align:center;outline:none;}
+.num-inp:focus{border-color:var(--gold);}
+.btn-pick{flex:1;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--dark);
+  border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:3px;cursor:pointer;}
+.btn-pick:active{transform:scale(.97);}
+
+.back-btn{background:none;border:none;color:#555;font-size:.75rem;letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;display:flex;align-items:center;gap:6px;margin-bottom:14px;}
+.mode-title{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--gold);letter-spacing:3px;text-align:center;}
+.mode-info{font-size:.8rem;color:#555;text-align:center;margin-bottom:20px;margin-top:4px;}
+
+.cell-info-box{border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+.cib-icon{font-size:1.4rem;}
+.cib-label{font-size:.65rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;}
+.cib-value{font-size:.95rem;font-weight:700;}
+.cib-pts{font-size:.75rem;margin-top:3px;opacity:.7;}
+
+.mode-btn{width:100%;border:2px solid;border-radius:16px;padding:18px 20px;
+  display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+  transition:all .2s;margin-bottom:11px;text-align:left;}
+.mode-btn:active{transform:scale(.97);}
+.mode-btn.cash{background:linear-gradient(135deg,#0a2718,#0f3d20);border-color:var(--cash);}
+.mode-btn.carre{background:linear-gradient(135deg,#0a1530,#0f2460);border-color:var(--carre);}
+.mode-btn.duo{background:linear-gradient(135deg,#200a40,#4a1280);border-color:var(--duo);}
+.mb-name{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;color:#fff;letter-spacing:3px;}
+.mb-desc{font-size:.75rem;color:rgba(255,255,255,.5);margin-top:2px;}
+.mb-pts{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:#fff;text-align:right;}
+.mb-pts small{font-size:1rem;display:block;margin-top:-4px;opacity:.6;}
+.mb-pts.bonus{color:var(--gold) !important;}
+.mb-pts.bonus small{color:var(--gold2);}
+
+.q-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;}
+.q-box-top{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.mode-pill{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:3px;padding:5px 13px;border-radius:100px;}
+.mode-pill.cash{background:var(--cash);color:#fff;}
+.mode-pill.carre{background:var(--carre);color:#fff;}
+.mode-pill.duo{background:var(--duo);color:#fff;}
+.cat-pill{font-size:.65rem;color:#888;letter-spacing:2px;text-transform:uppercase;padding:5px 10px;border:1px solid #252545;border-radius:100px;}
+.q-text{font-size:1rem;font-weight:700;line-height:1.45;color:var(--text);}
+
+.secret{background:rgba(245,200,66,.06);border:1.5px solid rgba(245,200,66,.2);
+  border-radius:12px;padding:13px 16px;margin-bottom:12px;}
+.secret-lbl{font-size:.6rem;color:#888;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.secret-ans{font-size:1.1rem;font-weight:700;color:var(--gold);}
+
+#opts-zone{margin-bottom:12px;}
+.opt-row{background:var(--card);border:1.5px solid var(--border);border-radius:11px;
+  padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;font-size:.9rem;font-weight:600;}
+.opt-row.correct{border-color:var(--cash);color:var(--cash);background:rgba(34,197,94,.08);}
+.opt-ltr{width:26px;height:26px;border-radius:50%;background:#1c1c30;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:#666;flex-shrink:0;}
+.opt-row.correct .opt-ltr{background:var(--cash);color:#fff;}
+
+.who-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 16px;margin-bottom:12px;}
+.who-lbl{font-size:.65rem;color:#555;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+#who-btns{display:flex;flex-wrap:wrap;gap:8px;}
+.who-btn{padding:9px 16px;border-radius:9px;border:1.5px solid;cursor:pointer;
+  font-size:.85rem;font-weight:700;transition:all .2s;}
+.who-btn:active{transform:scale(.95);}
+.who-btn.selected{color:#fff !important;}
+
+.val-lbl{font-size:.65rem;color:#555;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.val-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px;}
+.btn-ok{background:linear-gradient(135deg,#0a2718,#166534);border:2px solid var(--cash);
+  border-radius:12px;padding:15px;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;
+  letter-spacing:2px;color:var(--cash);cursor:pointer;transition:all .2s;}
+.btn-ok:active{transform:scale(.97);}
+.btn-ko{background:rgba(239,68,68,.06);border:2px solid rgba(239,68,68,.3);
+  border-radius:12px;padding:15px;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;
+  letter-spacing:2px;color:var(--red);cursor:pointer;transition:all .2s;}
+.btn-ko:active{transform:scale(.97);}
+
+.btn-next{width:100%;background:var(--card);border:2px solid var(--border);
+  border-radius:12px;padding:15px;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;
+  letter-spacing:3px;color:var(--text);cursor:pointer;display:none;}
+.btn-next:active{transform:scale(.97);}
+
+.pts-earned{background:rgba(245,200,66,.08);border:1px solid rgba(245,200,66,.2);
+  border-radius:10px;padding:10px 16px;text-align:center;margin-bottom:10px;display:none;}
+.pe-lbl{font-size:.65rem;color:#888;letter-spacing:2px;text-transform:uppercase;}
+.pe-val{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--gold);}
+
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--card);border:1px solid var(--border);border-radius:100px;
+  padding:11px 26px;font-weight:700;font-size:.9rem;
+  transition:transform .3s ease;z-index:999;white-space:nowrap;}
+#toast.show{transform:translateX(-50%) translateY(0);}
+#toast.ok{border-color:var(--cash);color:var(--cash);background:rgba(34,197,94,.1);}
+#toast.ko{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.08);}
+#toast.info{border-color:var(--gold);color:var(--gold);background:rgba(245,200,66,.08);}
+
+.sep{height:1px;background:var(--border);margin:14px 0;}
+.scroll-wrap{overflow-y:auto;max-height:calc(100vh - 58px);}
+
+#scr-resume{}
+.resume-hero{text-align:center;padding:32px 0 16px;}
+.resume-icon{font-size:3.5rem;margin-bottom:10px;}
+.resume-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:4px;color:var(--gold);}
+.resume-sub{font-size:.8rem;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
+.resume-state{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;}
+.rs-lbl{font-size:.6rem;color:#555;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+.rs-players{display:flex;flex-direction:column;gap:8px;}
+.rs-player{display:flex;align-items:center;justify-content:space-between;}
+.rs-name{font-weight:700;display:flex;align-items:center;gap:8px;}
+.rs-dot{width:10px;height:10px;border-radius:50%;}
+.rs-score{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;}
+.rs-progress{font-size:.75rem;color:#555;margin-top:6px;text-align:center;}
+.btn-resume{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:var(--dark);border:none;border-radius:12px;padding:17px;
+  font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:4px;
+  cursor:pointer;margin-bottom:10px;box-shadow:0 4px 24px rgba(245,200,66,.3);transition:all .2s;}
+.btn-resume:active{transform:scale(.97);}
+.btn-newgame{width:100%;background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.25);
+  border-radius:12px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;
+  letter-spacing:3px;color:var(--red);cursor:pointer;transition:all .2s;}
+.btn-newgame:active{transform:scale(.97);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="top-logo">QUIZ SHOW</div>
+  <div class="top-right">
+    <div class="badge" id="top-badge">CONFIG</div>
+  </div>
+</div>
+
+<!-- RESUME -->
+<div id="scr-resume" class="scr scroll-wrap">
+  <div class="pad">
+    <div class="resume-hero">
+      <div class="resume-icon">⚡</div>
+      <div class="resume-title">PARTIE EN COURS</div>
+      <div class="resume-sub">Rechargement détecté</div>
+    </div>
+    <div class="resume-state">
+      <div class="rs-lbl">État de la partie</div>
+      <div class="rs-players" id="rs-players"></div>
+      <div class="rs-progress" id="rs-progress"></div>
+    </div>
+    <button class="btn-resume" onclick="resumeGame()">↩ REPRENDRE LA PARTIE</button>
+    <button class="btn-newgame" onclick="newGame()">✕ Nouvelle partie (effacer)</button>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div id="scr-setup" class="scr on scroll-wrap">
+  <div class="pad">
+    <div class="hero">
+      <div class="hero-title">MAÎTRE DU JEU</div>
+      <div class="hero-sub">Configuration de la partie</div>
+    </div>
+    <div class="lbl">Ajouter un joueur</div>
+    <input class="inp" id="inp-name" type="text" placeholder="Prénom…" maxlength="14" autocomplete="off">
+    <input class="inp" id="inp-spec" type="text" placeholder="Spécialité (ex: Harry Potter, WW2…)" maxlength="40" autocomplete="off" style="margin-top:8px;">
+    <button class="btn-add" onclick="addPlayer()">+ Ajouter ce joueur</button>
+    <div class="lbl">Joueurs configurés (<span id="pcount">0</span>/5)</div>
+    <div id="player-configs"></div>
+    <div class="sep"></div>
+    <button class="btn-launch" id="btn-launch" onclick="launchGame()" disabled>▶ LANCER LA PARTIE</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="scr-game" class="scr scroll-wrap">
+  <div class="pad">
+    <div id="score-strip"></div>
+    <button class="btn-recall" onclick="recall()">
+      <span>👁</span> Afficher les couleurs (5 sec)
+    </button>
+    <div class="grid-lbl">Choisir une case</div>
+    <div id="mini-grid"></div>
+    <div class="num-row">
+      <input class="num-inp" id="num-inp" type="number" min="1" max="50" placeholder="N°">
+      <button class="btn-pick" onclick="pickCell()">CHOISIR →</button>
+    </div>
+    <div id="cell-hint" style="font-size:.75rem;color:#555;margin-top:6px;text-align:center;"></div>
+  </div>
+</div>
+
+<!-- MODE -->
+<div id="scr-mode" class="scr scroll-wrap">
+  <div class="pad">
+    <button class="back-btn" onclick="backToGame()">← Retour</button>
+    <div class="mode-title">CHOISIR LE MODE</div>
+    <div class="mode-info" id="mode-info"></div>
+    <div id="cell-info-box" class="cell-info-box"></div>
+    <button class="mode-btn cash" onclick="chooseMode('cash')">
+      <div>
+        <div class="mb-name">CASH</div>
+        <div class="mb-desc">Réponse libre, sans aide</div>
+      </div>
+      <div class="mb-pts" id="pts-cash">10 pts<small>son domaine</small></div>
+    </button>
+    <button class="mode-btn carre" onclick="chooseMode('carre')">
+      <div>
+        <div class="mb-name">CARRÉ</div>
+        <div class="mb-desc">4 propositions de réponse</div>
+      </div>
+      <div class="mb-pts" id="pts-carre">5 pts<small>tous domaines</small></div>
+    </button>
+    <button class="mode-btn duo" onclick="chooseMode('duo')">
+      <div>
+        <div class="mb-name">DUO</div>
+        <div class="mb-desc">2 propositions de réponse</div>
+      </div>
+      <div class="mb-pts" id="pts-duo">2 pts<small>tous domaines</small></div>
+    </button>
+  </div>
+</div>
+
+<!-- QUESTION -->
+<div id="scr-question" class="scr scroll-wrap">
+  <div class="pad">
+    <div class="q-box">
+      <div class="q-box-top">
+        <div id="qb-mode" class="mode-pill cash">CASH</div>
+        <div id="qb-cat" class="cat-pill"></div>
+      </div>
+      <div id="qb-text" class="q-text"></div>
+    </div>
+    <div class="secret">
+      <div class="secret-lbl">🔒 Bonne réponse (visible uniquement ici)</div>
+      <div id="secret-ans" class="secret-ans"></div>
+    </div>
+    <div id="opts-zone"></div>
+    <div class="who-box" id="who-box">
+      <div class="who-lbl">Qui répond à cette question ?</div>
+      <div id="who-btns"></div>
+    </div>
+    <div class="pts-earned" id="pts-preview">
+      <div class="pe-lbl">Points si juste</div>
+      <div class="pe-val" id="pts-preview-val">—</div>
+    </div>
+    <div id="val-section">
+      <div class="val-lbl">Le joueur a-t-il bien répondu ?</div>
+      <div class="val-row">
+        <button class="btn-ok" onclick="validate(true)">✓ JUSTE</button>
+        <button class="btn-ko" onclick="validate(false)">✗ FAUX</button>
+      </div>
+    </div>
+    <button class="btn-next" id="btn-next" onclick="nextQ()">➜ QUESTION SUIVANTE</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// QUESTIONS
+// ═══════════════════════════════════════════
+const SPECIALITY_DATA = {
+  "Seconde Guerre Mondiale": [
+    {q:"En quelle année Hitler est-il devenu chancelier d'Allemagne ?",a:"1933",opts:["1933","1935","1939","1930"],cat:"WW2"},
+    {q:"Quel était le nom de code du débarquement en Normandie ?",a:"Opération Overlord",opts:["Opération Overlord","Opération Torch","Opération Market Garden","Opération Barbarossa"],cat:"WW2"},
+    {q:"Quel pays a été envahi par l'Allemagne le 1er septembre 1939 ?",a:"Pologne",opts:["Pologne","France","Belgique","Autriche"],cat:"WW2"},
+    {q:"Quel était le surnom du général Rommel ?",a:"Le Renard du désert",opts:["Le Renard du désert","Le Tigre","L'Aigle","Le Lion"],cat:"WW2"},
+    {q:"En quelle ville les Alliés ont-ils tenu la conférence de Yalta ?",a:"Yalta",opts:["Yalta","Potsdam","Casablanca","Téhéran"],cat:"WW2"},
+    {q:"Quel bombardier américain a largué la bombe atomique sur Hiroshima ?",a:"Enola Gay",opts:["Enola Gay","Memphis Belle","Bockscar","Lady Be Good"],cat:"WW2"},
+    {q:"Quel mouvement français s'est opposé à l'occupation nazie ?",a:"La Résistance",opts:["La Résistance","La Milice","La Légion","L'Armistice"],cat:"WW2"},
+    {q:"Combien de jours a duré la Bataille de Stalingrad ?",a:"~200 jours",opts:["~200 jours","~50 jours","~100 jours","~400 jours"],cat:"WW2"},
+    {q:"Quelle ville japonaise a été touchée en second par une bombe atomique ?",a:"Nagasaki",opts:["Nagasaki","Tokyo","Osaka","Hiroshima"],cat:"WW2"},
+    {q:"Qui était le Premier ministre britannique pendant la majeure partie de la guerre ?",a:"Winston Churchill",opts:["Winston Churchill","Neville Chamberlain","Clement Attlee","Anthony Eden"],cat:"WW2"},
+  ],
+  "Harry Potter": [
+    {q:"Quel est le nom complet de Harry Potter ?",a:"Harry James Potter",opts:["Harry James Potter","Harry John Potter","Harry Edward Potter","Harry Thomas Potter"],cat:"Harry Potter"},
+    {q:"Dans quelle maison de Poudlard est Harry Potter ?",a:"Gryffondor",opts:["Gryffondor","Serdaigle","Serpentard","Poufsouffle"],cat:"Harry Potter"},
+    {q:"Quel est le patronus de Hermione Granger ?",a:"Une loutre",opts:["Une loutre","Un cerf","Une chouette","Un phoenix"],cat:"Harry Potter"},
+    {q:"Comment s'appelle le crapaud de Neville Londubat ?",a:"Trevor",opts:["Trevor","Norbert","Pattenrond","Croûtard"],cat:"Harry Potter"},
+    {q:"Quelle est la formule du sortilège de désarmement ?",a:"Expelliarmus",opts:["Expelliarmus","Expecto Patronum","Avada Kedavra","Alohomora"],cat:"Harry Potter"},
+    {q:"Quel est le vrai nom de Voldemort ?",a:"Tom Jedusor",opts:["Tom Jedusor","Gellert Grindelwald","Salazar Serpentard","Marvolo Gaunt"],cat:"Harry Potter"},
+    {q:"Quelle plante crie quand on l'arrache à Poudlard ?",a:"La Mandragore",opts:["La Mandragore","La Vengeance","La Wolkenbeere","Le Coucous"],cat:"Harry Potter"},
+    {q:"Combien de balles y a-t-il dans un match de Quidditch ?",a:"4",opts:["4","3","5","6"],cat:"Harry Potter"},
+    {q:"Qui a tué Sirius Black ?",a:"Bellatrix Lestrange",opts:["Bellatrix Lestrange","Voldemort","Peter Pettigrow","Severus Rogue"],cat:"Harry Potter"},
+    {q:"Quel est le nom de la banque des sorciers à Londres ?",a:"Gringotts",opts:["Gringotts","Ollivanders","Poudlard","Knockturn"],cat:"Harry Potter"},
+  ],
+  "Les femmes en politique": [
+    {q:"Qui fut la première femme Premier ministre du Royaume-Uni ?",a:"Margaret Thatcher",opts:["Margaret Thatcher","Theresa May","Tony Blair","Gordon Brown"],cat:"Femmes Politiques"},
+    {q:"Quelle femme fut la première à obtenir deux Prix Nobel ?",a:"Marie Curie",opts:["Marie Curie","Malala Yousafzai","Mother Teresa","Simone de Beauvoir"],cat:"Femmes Politiques"},
+    {q:"En quelle année les femmes françaises ont-elles obtenu le droit de vote ?",a:"1944",opts:["1944","1936","1920","1958"],cat:"Femmes Politiques"},
+    {q:"Qui fut la première femme chancelière d'Allemagne ?",a:"Angela Merkel",opts:["Angela Merkel","Heidi Klum","Ursula von der Leyen","Hannah Arendt"],cat:"Femmes Politiques"},
+    {q:"Simone Veil est connue pour quelle loi historique française ?",a:"La légalisation de l'avortement",opts:["La légalisation de l'avortement","Le droit de vote","La parité","La contraception"],cat:"Femmes Politiques"},
+    {q:"Qui fut la première femme secrétaire d'État des États-Unis ?",a:"Madeleine Albright",opts:["Madeleine Albright","Hillary Clinton","Condoleezza Rice","Janet Yellen"],cat:"Femmes Politiques"},
+    {q:"Qui fut la première présidente d'un pays d'Amérique latine ?",a:"Isabel Perón",opts:["Isabel Perón","Michelle Bachelet","Dilma Rousseff","Cristina Kirchner"],cat:"Femmes Politiques"},
+    {q:"Jacinda Ardern était Première ministre de quel pays ?",a:"Nouvelle-Zélande",opts:["Nouvelle-Zélande","Australie","Canada","Irlande"],cat:"Femmes Politiques"},
+    {q:"Qui fut la première femme à diriger un gouvernement en Asie du Sud ?",a:"Sirimavo Bandaranaike",opts:["Sirimavo Bandaranaike","Indira Gandhi","Benazir Bhutto","Aung San Suu Kyi"],cat:"Femmes Politiques"},
+    {q:"Quel article de la Constitution française garantit l'égal accès aux mandats électoraux ?",a:"Article 1",opts:["Article 1","Article 2","Article 3","Article 10"],cat:"Femmes Politiques"},
+  ],
+};
+
+const CULTURE_G = [
+  {q:"Quelle est la capitale de l'Australie ?",a:"Canberra",opts:["Canberra","Sydney","Melbourne","Brisbane"],cat:"Culture G"},
+  {q:"Qui a peint la Joconde ?",a:"Léonard de Vinci",opts:["Léonard de Vinci","Raphaël","Michel-Ange","Botticelli"],cat:"Culture G"},
+  {q:"Quel est le plus grand océan du monde ?",a:"Le Pacifique",opts:["Le Pacifique","L'Atlantique","L'Indien","L'Arctique"],cat:"Culture G"},
+  {q:"Combien de pays composent l'Union Européenne ?",a:"27",opts:["27","25","28","30"],cat:"Culture G"},
+  {q:"Quelle est la monnaie du Japon ?",a:"Le yen",opts:["Le yen","Le yuan","Le won","Le baht"],cat:"Culture G"},
+  {q:"En quelle année a eu lieu la Révolution française ?",a:"1789",opts:["1789","1799","1776","1804"],cat:"Culture G"},
+  {q:"Quel est le symbole chimique de l'or ?",a:"Au",opts:["Au","Or","Go","Ag"],cat:"Culture G"},
+  {q:"Qui a écrit Don Quichotte ?",a:"Cervantes",opts:["Cervantes","Molière","Shakespeare","Voltaire"],cat:"Culture G"},
+  {q:"Quelle est la planète la plus proche du Soleil ?",a:"Mercure",opts:["Mercure","Vénus","Mars","Terre"],cat:"Culture G"},
+  {q:"Quel sport se joue à Wimbledon ?",a:"Tennis",opts:["Tennis","Golf","Cricket","Polo"],cat:"Culture G"},
+  {q:"Quelle est la langue officielle du Brésil ?",a:"Portugais",opts:["Portugais","Espagnol","Français","Anglais"],cat:"Culture G"},
+  {q:"Combien de cordes a un violon ?",a:"4",opts:["4","5","6","3"],cat:"Culture G"},
+  {q:"Qui a fondé Microsoft ?",a:"Bill Gates",opts:["Bill Gates","Steve Jobs","Mark Zuckerberg","Elon Musk"],cat:"Culture G"},
+  {q:"Dans quelle ville se trouve le Colisée ?",a:"Rome",opts:["Rome","Athènes","Paris","Naples"],cat:"Culture G"},
+  {q:"Quel est le plus long fleuve du monde ?",a:"Le Nil",opts:["Le Nil","L'Amazone","Le Yangtsé","Le Mississippi"],cat:"Culture G"},
+  {q:"Combien de joueurs dans une équipe de football ?",a:"11",opts:["11","10","12","9"],cat:"Culture G"},
+  {q:"En quelle année l'homme a-t-il marché sur la Lune ?",a:"1969",opts:["1969","1972","1967","1965"],cat:"Culture G"},
+  {q:"Quel pays a remporté la Coupe du Monde 2022 ?",a:"Argentine",opts:["Argentine","France","Brésil","Maroc"],cat:"Culture G"},
+  {q:"Qui a écrit Les Misérables ?",a:"Victor Hugo",opts:["Victor Hugo","Zola","Balzac","Flaubert"],cat:"Culture G"},
+  {q:"Quelle est la capitale de l'Argentine ?",a:"Buenos Aires",opts:["Buenos Aires","Santiago","Lima","Bogotá"],cat:"Culture G"},
+];
+
+const COLORS = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6'];
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const G = {
+  players: [],
+  cells: {},
+  used: new Set(),
+  currentCell: null,
+  currentMode: null,
+  currentQ: null,
+  currentOwnerIdx: null,
+  currentAnsweringIdx: null,
+};
+
+// ═══════════════════════════════════════════
+// FIREBASE — REALTIME DATABASE
+// ═══════════════════════════════════════════
+const FIREBASE_URL = 'https://quizz-8dd48-default-rtdb.firebaseio.com/quizshow/cmd.json';
+
+async function sendTV(cmd) {
+  const p = {...cmd, ts: Date.now()};
+  // Sauvegarde locale conservée pour le système de reprise de partie
+  localStorage.setItem('quiz-cmd', JSON.stringify(p));
+  try {
+    await fetch(FIREBASE_URL, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(p)
+    });
+  } catch(e) {
+    console.warn('Firebase sendTV error', e);
+    toast('⚠️ Erreur réseau Firebase', 'ko');
+  }
+}
+
+// ═══════════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════════
+const SAVE_KEY = 'quiz-game-save';
+
+function saveState() {
+  try {
+    const snapshot = {
+      players: G.players, cells: G.cells, used: [...G.used],
+      currentCell: G.currentCell, currentMode: G.currentMode,
+      currentQ: G.currentQ, currentOwnerIdx: G.currentOwnerIdx,
+      currentAnsweringIdx: G.currentAnsweringIdx,
+      screen: document.querySelector('.scr.on')?.id || 'scr-game',
+      savedAt: Date.now(),
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(snapshot));
+  } catch(e) { console.warn('Save failed', e); }
+}
+
+function loadSave() {
+  try { return JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch(e) { return null; }
+}
+
+function clearSave() { localStorage.removeItem(SAVE_KEY); }
+
+window.addEventListener('DOMContentLoaded', () => {
+  const save = loadSave();
+  if (save && save.players && save.players.length > 0 && save.used && save.used.length < 50) {
+    document.getElementById('rs-players').innerHTML = save.players.map(p =>
+      `<div class="rs-player">
+        <div class="rs-name"><div class="rs-dot" style="background:${p.color}"></div>${p.name} <span style="font-size:.75rem;color:${p.color}88;font-weight:400">${p.specialite}</span></div>
+        <div class="rs-score" style="color:${p.color}">${p.score} pts</div>
+      </div>`
+    ).join('');
+    document.getElementById('rs-progress').textContent =
+      `${save.used.length} / 50 cases jouées — ${50 - save.used.length} restantes`;
+    showScreen('scr-resume', 'REPRISE');
+  }
+});
+
+function resumeGame() {
+  const save = loadSave();
+  if (!save) return;
+  G.players = save.players; G.cells = save.cells; G.used = new Set(save.used);
+  G.currentCell = save.currentCell; G.currentMode = save.currentMode;
+  G.currentQ = save.currentQ; G.currentOwnerIdx = save.currentOwnerIdx;
+  G.currentAnsweringIdx = save.currentAnsweringIdx;
+  buildMiniGrid(); renderScoreStrip();
+  sendTV({ type:'start', players:G.players.map(p=>({name:p.name,specialite:p.specialite,color:p.color,score:p.score})), cells:G.cells });
+  sendTV({ type:'next', cell:null, players:G.players.map(p=>({name:p.name,specialite:p.specialite,color:p.color,score:p.score})) });
+  [...G.used].forEach(cell => {
+    sendTV({ type:'next', cell, players:G.players.map(p=>({name:p.name,specialite:p.specialite,color:p.color,score:p.score})) });
+  });
+  showScreen('scr-game','JEU');
+  toast('Partie reprise ! 👍','ok');
+}
+
+function newGame() {
+  if (!confirm('Effacer la partie en cours et repartir à zéro ?')) return;
+  clearSave();
+  G.players=[]; G.cells={}; G.used=new Set();
+  G.currentCell=null; G.currentMode=null; G.currentQ=null;
+  G.currentOwnerIdx=null; G.currentAnsweringIdx=null;
+  renderPlayerConfigs();
+  showScreen('scr-setup','CONFIG');
+}
+
+// ═══════════════════════════════════════════
+// SETUP
+// ═══════════════════════════════════════════
+document.getElementById('inp-spec').addEventListener('keydown', e => { if(e.key==='Enter') addPlayer(); });
+document.getElementById('inp-name').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('inp-spec').focus(); });
+
+function addPlayer() {
+  const name = document.getElementById('inp-name').value.trim();
+  const spec = document.getElementById('inp-spec').value.trim();
+  if (!name || !spec) { toast('Remplis les deux champs !','ko'); return; }
+  if (G.players.length >= 5) { toast('Maximum 5 joueurs','ko'); return; }
+  if (G.players.find(p=>p.name===name)) { toast('Ce prénom existe déjà','ko'); return; }
+  G.players.push({ name, specialite:spec, color:COLORS[G.players.length], score:0, questions:getQuestionsForSpec(spec) });
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-spec').value = '';
+  renderPlayerConfigs();
+}
+
+function getQuestionsForSpec(spec) {
+  for (const key of Object.keys(SPECIALITY_DATA)) {
+    if (spec.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(spec.toLowerCase())) {
+      return [...SPECIALITY_DATA[key]];
+    }
+  }
+  const shuffled = [...CULTURE_G].sort(()=>Math.random()-.5);
+  return shuffled.slice(0,10).map(q=>({...q, cat:`[${spec}] Demo`}));
+}
+
+function removePlayer(idx) { G.players.splice(idx,1); renderPlayerConfigs(); }
+
+function renderPlayerConfigs() {
+  const c = document.getElementById('player-configs');
+  c.innerHTML = G.players.map((p,i) =>
+    `<div class="pconfig">
+      <div class="pconfig-header">
+        <div class="color-dot" style="background:${p.color}"></div>
+        <div><div class="pconfig-name">${p.name}</div><div class="pconfig-spec">🎯 ${p.specialite}</div></div>
+        <button class="pconfig-remove" onclick="removePlayer(${i})">Retirer</button>
+      </div>
+    </div>`
+  ).join('');
+  document.getElementById('pcount').textContent = G.players.length;
+  document.getElementById('btn-launch').disabled = G.players.length < 2;
+}
+
+// ═══════════════════════════════════════════
+// LAUNCH
+// ═══════════════════════════════════════════
+function launchGame() {
+  assignCells();
+  sendTV({ type:'start', players:G.players.map(p=>({name:p.name,specialite:p.specialite,color:p.color,score:p.score})), cells:G.cells });
+  buildMiniGrid(); renderScoreStrip();
+  showScreen('scr-game','JEU');
+  saveState();
+  setTimeout(() => { sendTV({type:'flash'}); }, 800);
+}
+
+function assignCells() {
+  const allCells = Array.from({length:50},(_,i)=>i+1);
+  const shuffled = allCells.sort(()=>Math.random()-.5);
+  G.cells = {};
+  const cultureGQuestions = [...CULTURE_G].sort(()=>Math.random()-.5);
+  G.players.forEach((p,pIdx) => {
+    const pCells = shuffled.splice(0,10);
+    const qShuffled = [...p.questions].sort(()=>Math.random()-.5);
+    pCells.forEach((cellNum,qIdx) => {
+      G.cells[cellNum] = { owner:p.name, ownerIdx:pIdx, question:qShuffled[qIdx % qShuffled.length] };
+    });
+  });
+  let cgIdx = 0;
+  shuffled.forEach(cellNum => {
+    G.cells[cellNum] = { owner:null, ownerIdx:null, question:cultureGQuestions[cgIdx++ % cultureGQuestions.length] };
+  });
+}
+
+// ═══════════════════════════════════════════
+// GAME SCREEN
+// ═══════════════════════════════════════════
+function buildMiniGrid() {
+  const g = document.getElementById('mini-grid');
+  g.innerHTML = '';
+  for (let i = 1; i <= 50; i++) {
+    const info = G.cells[i];
+    const d = document.createElement('div');
+    d.id = 'mc'+i; d.dataset.num = i;
+    d.className = `mc ${G.used.has(i)?'used':'av'}`;
+    d.textContent = i;
+    if (info && info.owner) {
+      const dot = document.createElement('div');
+      dot.className = 'dot'; dot.style.background = G.players[info.ownerIdx].color;
+      d.appendChild(dot);
+      if (!G.used.has(i)) d.style.borderColor = G.players[info.ownerIdx].color + '44';
+    }
+    if (!G.used.has(i)) {
+      d.onclick = () => {
+        document.querySelectorAll('.mc').forEach(c=>c.classList.remove('sel'));
+        d.classList.add('sel');
+        if (info && info.owner) {
+          d.style.borderColor = G.players[info.ownerIdx].color;
+          d.style.boxShadow = `0 0 10px ${G.players[info.ownerIdx].color}55`;
+        } else { d.style.borderColor = '#455'; }
+        document.getElementById('num-inp').value = i;
+        updateCellHint(i);
+      };
+    }
+    g.appendChild(d);
+  }
+}
+
+function updateCellHint(num) {
+  const hint = document.getElementById('cell-hint');
+  const info = G.cells[num];
+  if (!info) { hint.textContent=''; return; }
+  if (info.owner) {
+    const p = G.players[info.ownerIdx];
+    hint.innerHTML = `<span style="color:${p.color}">● Domaine de ${p.name} — ${p.specialite}</span>`;
+  } else {
+    hint.innerHTML = '<span style="color:#555">● Culture Générale</span>';
+  }
+}
+
+function pickCell() {
+  const val = parseInt(document.getElementById('num-inp').value);
+  if (!val || val<1 || val>50) { toast('Numéro invalide','ko'); return; }
+  if (G.used.has(val)) { toast('Case déjà utilisée !','ko'); return; }
+  G.currentCell = val;
+  G.currentQ = G.cells[val].question;
+  G.currentOwnerIdx = G.cells[val].ownerIdx;
+  sendTV({type:'spin', cell:val});
+  const info = G.cells[val];
+  document.getElementById('mode-info').textContent = `Case ${val}${info.owner ? ` — Domaine de ${info.owner}` : ' — Culture Générale'}`;
+  const box = document.getElementById('cell-info-box');
+  if (info.owner) {
+    const p = G.players[info.ownerIdx];
+    box.style.background = p.color+'14'; box.style.border = `1.5px solid ${p.color}44`;
+    box.innerHTML = `<div class="cib-icon">🎯</div><div><div class="cib-label" style="color:${p.color}88">Domaine assigné à</div><div class="cib-value" style="color:${p.color}">${p.name}</div><div class="cib-pts" style="color:${p.color}">Cash sur son domaine : 10 pts · Cash sur domaine étranger : 20 pts</div></div>`;
+  } else {
+    box.style.background='rgba(70,70,100,.12)'; box.style.border='1.5px solid #252545';
+    box.innerHTML=`<div class="cib-icon">🌐</div><div><div class="cib-label">Catégorie</div><div class="cib-value">Culture Générale</div><div class="cib-pts">Cash : 5 pts · Carré : 2 pts · Duo : 1 pt</div></div>`;
+  }
+  updateModePts();
+  setTimeout(() => showScreen('scr-mode','MODE'), 1800);
+}
+
+function updateModePts() {
+  const info = G.cells[G.currentCell];
+  const cashPts = document.getElementById('pts-cash');
+  const carrePts = document.getElementById('pts-carre');
+  const duoPts = document.getElementById('pts-duo');
+  if (!info.owner) {
+    cashPts.className='mb-pts'; cashPts.innerHTML='5 pts<small>Culture G</small>';
+    carrePts.className='mb-pts'; carrePts.innerHTML='2 pts<small>Culture G</small>';
+    duoPts.className='mb-pts'; duoPts.innerHTML='1 pt<small>Culture G</small>';
+  } else {
+    cashPts.className='mb-pts bonus'; cashPts.innerHTML='10 / <span style="color:var(--gold)">20</span> pts<small>son / autre domaine</small>';
+    carrePts.className='mb-pts'; carrePts.innerHTML='5 pts<small>tous domaines</small>';
+    duoPts.className='mb-pts'; duoPts.innerHTML='2 pts<small>tous domaines</small>';
+  }
+}
+
+function recall() {
+  sendTV({type:'recall', duration:5000});
+  toast('Couleurs affichées 5 sec','info');
+}
+
+function backToGame() {
+  G.currentCell = null;
+  document.getElementById('num-inp').value = '';
+  document.getElementById('cell-hint').textContent = '';
+  showScreen('scr-game','JEU');
+}
+
+// ═══════════════════════════════════════════
+// MODE
+// ═══════════════════════════════════════════
+function chooseMode(mode) {
+  G.currentMode = mode;
+  const q = G.currentQ;
+  let answers = null;
+  if (mode==='carre') { answers = [...q.opts]; }
+  else if (mode==='duo') { const wrong = q.opts.find(o=>o!==q.a); answers=[q.a,wrong].sort(()=>Math.random()-.5); }
+  sendTV({ type:'question', cell:G.currentCell, mode, q, ownerIdx:G.currentOwnerIdx, answers:answers||[], showBonus:false });
+  renderQuestionScreen(mode, answers);
+  saveState();
+  showScreen('scr-question','QUESTION');
+}
+
+// ═══════════════════════════════════════════
+// QUESTION SCREEN
+// ═══════════════════════════════════════════
+function renderQuestionScreen(mode, answers) {
+  const q = G.currentQ;
+  const pill = document.getElementById('qb-mode');
+  pill.className = `mode-pill ${mode}`;
+  pill.textContent = {cash:'CASH',carre:'CARRÉ',duo:'DUO'}[mode];
+  document.getElementById('qb-cat').textContent = q.cat;
+  document.getElementById('qb-text').textContent = q.q;
+  document.getElementById('secret-ans').textContent = q.a;
+  const oz = document.getElementById('opts-zone');
+  oz.innerHTML = '';
+  if (answers && answers.length > 0) {
+    answers.forEach((ans,i) => {
+      const d = document.createElement('div');
+      d.className = `opt-row${ans===q.a?' correct':''}`;
+      d.innerHTML = `<div class="opt-ltr">${String.fromCharCode(65+i)}</div><span>${ans}</span>`;
+      oz.appendChild(d);
+    });
+  }
+  const wb = document.getElementById('who-btns');
+  wb.innerHTML = G.players.map((p,i) =>
+    `<button class="who-btn" style="border-color:${p.color}66;color:${p.color}" onclick="selectWho(${i})" id="who-${i}">${p.name}</button>`
+  ).join('');
+  G.currentAnsweringIdx = null;
+  document.getElementById('val-section').style.display = 'block';
+  document.getElementById('btn-next').style.display = 'none';
+  document.getElementById('pts-preview').style.display = 'none';
+}
+
+function selectWho(idx) {
+  G.currentAnsweringIdx = idx;
+  G.players.forEach((p,i) => {
+    const btn = document.getElementById('who-'+i);
+    if (i===idx) { btn.classList.add('selected'); btn.style.background=p.color; btn.style.color='#fff'; }
+    else { btn.classList.remove('selected'); btn.style.background=''; btn.style.color=p.color; }
+  });
+  const pts = calcPoints(idx, G.currentMode, G.currentOwnerIdx);
+  const pv = document.getElementById('pts-preview');
+  const pvv = document.getElementById('pts-preview-val');
+  pv.style.display = 'block';
+  const isBonus = G.currentMode==='cash' && G.currentOwnerIdx!==null && G.currentOwnerIdx!==idx;
+  pvv.innerHTML = isBonus ? `<span style="color:var(--gold)">${pts} pts ✦ BONUS ×2 !</span>` : `${pts} pts`;
+  if (isBonus) {
+    sendTV({ type:'question', cell:G.currentCell, mode:G.currentMode, q:G.currentQ, ownerIdx:G.currentOwnerIdx, answers:[], showBonus:true });
+  }
+}
+
+function calcPoints(answeringIdx, mode, ownerIdx) {
+  if (ownerIdx===null) return {cash:5,carre:2,duo:1}[mode];
+  if (mode==='cash') return answeringIdx===ownerIdx ? 10 : 20;
+  return {carre:5,duo:2}[mode];
+}
+
+// ═══════════════════════════════════════════
+// VALIDATE
+// ═══════════════════════════════════════════
+function validate(correct) {
+  if (G.currentAnsweringIdx===null) { toast('Sélectionne qui répond !','ko'); return; }
+  const pts = calcPoints(G.currentAnsweringIdx, G.currentMode, G.currentOwnerIdx);
+  const player = G.players[G.currentAnsweringIdx];
+  if (correct) {
+    player.score += pts;
+    const isBonus = G.currentMode==='cash' && G.currentOwnerIdx!==null && G.currentOwnerIdx!==G.currentAnsweringIdx;
+    toast(`✓ +${pts} pts pour ${player.name}${isBonus?' 🌟 BONUS !':''}`, 'ok');
+  } else { toast(`✗ Mauvaise réponse`, 'ko'); }
+  sendTV({type:'reveal', correct, players:G.players.map(p=>({name:p.name,specialite:p.specialite,color:p.color,score:p.score}))});
+  document.getElementById('val-section').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'block';
+  renderScoreStrip();
+  saveState();
+}
+
+// ═══════════════════════════════════════════
+// NEXT
+// ═══════════════════════════════════════════
+function nextQ() {
+  G.used.add(G.currentCell);
+  if (G.used.size >= 50) {
+    sendTV({type:'winner', players:G.players.map(p=>({name:p.name,specialite:p.specialite,color:p.color,score:p.score}))});
+    clearSave();
+    showScreen('scr-game','FIN 🏆');
+    return;
+  }
+  sendTV({type:'next', cell:G.currentCell, players:G.players.map(p=>({name:p.name,specialite:p.specialite,color:p.color,score:p.score}))});
+  const el = document.getElementById('mc'+G.currentCell);
+  if (el) { el.className='mc used'; el.style.borderColor=''; el.style.boxShadow=''; el.onclick=null; }
+  document.getElementById('num-inp').value = '';
+  document.getElementById('cell-hint').textContent = '';
+  document.querySelectorAll('.mc').forEach(c=>c.classList.remove('sel'));
+  saveState();
+  showScreen('scr-game','JEU');
+}
+
+// ═══════════════════════════════════════════
+// SCORE STRIP
+// ═══════════════════════════════════════════
+function renderScoreStrip() {
+  const sorted = [...G.players].sort((a,b)=>b.score-a.score);
+  document.getElementById('score-strip').innerHTML = sorted.map((p,i) =>
+    `<div class="sc${i===0?' top':''}" style="border-color:${p.color}44;background:${p.color}0d">
+      <div class="sc-n" style="color:${p.color}88">${p.name}</div>
+      <div class="sc-p" style="color:${p.color}">${p.score}</div>
+    </div>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function showScreen(id, badge) {
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  document.getElementById('top-badge').textContent = badge || '';
+  window.scrollTo(0,0);
+}
+
+let toastTimer;
+function toast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.className='', 2800);
+}
+</script>
+</body>
+</html>
